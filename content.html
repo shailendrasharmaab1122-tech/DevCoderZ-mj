@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <title>Mission Jeet - Dashboard</title>
+    <style>
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-content { display: none; padding: 20px; border: 1px solid #ccc; }
+        .active { display: block; }
+        .subject-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .card { padding: 20px; background: #f4f4f4; border-radius: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="tabs">
+        <button onclick="showTab('live')">Live</button>
+        <button onclick="showTab('upcoming')">Upcoming</button>
+        <button onclick="showTab('completed')">Completed</button>
+    </div>
+
+    <div id="live" class="tab-content"><h3>Live Classes</h3><div id="live-list"></div></div>
+    <div id="upcoming" class="tab-content"><h3>Upcoming</h3><div id="upcoming-list"></div></div>
+    <div id="completed" class="tab-content"><h3>Completed</h3><div id="completed-list"></div></div>
+
+    <h2>Subjects & Folders</h2>
+    <div id="subject-container" class="subject-grid"></div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('id');
+
+        // 1. Live Classes Fetching
+        async function fetchLiveClasses(type, elementId) {
+            const res = await fetch(`https://api.thescholarverse.site/missionjeet/course/classes?type=${type}&id=${courseId}`);
+            const data = await res.json();
+            const list = document.getElementById(elementId);
+            // Yahan data render karein (agar data.data array khali nahi hai)
+            list.innerHTML = data.data.length ? "Classes found" : "No classes currently";
+        }
+
+        // 2. Subjects Fetching
+        async function fetchSubjects() {
+            const res = await fetch(`https://api.thescholarverse.site/missionjeet/course/all-content/${courseId}?limit=1000`);
+            const result = await res.json();
+            const container = document.getElementById('subject-container');
+            
+            result.data.forEach(item => {
+                container.innerHTML += `
+                    <div class="card" onclick="window.location.href='chapters.html?id=${item.entity_id}&title=${item.title}'">
+                        <h3>${item.title}</h3>
+                        <p>Videos: ${item.data.content_counts.video.paid + item.data.content_counts.video.free}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Initialize
+        fetchLiveClasses('live', 'live-list');
+        fetchLiveClasses('upcoming', 'upcoming-list');
+        fetchLiveClasses('completed', 'completed-list');
+        fetchSubjects();
+
+        function showTab(id) {
+            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+        }
+    </script>
+</body>
+</html>
