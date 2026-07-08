@@ -1,67 +1,41 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <title>Mission Jeet - Study</title>
-    <style>
-        .container { display: flex; gap: 20px; }
-        .sidebar { width: 300px; }
-        .player-area { flex-grow: 1; }
-        iframe { width: 100%; height: 500px; border: none; }
-        .item { padding: 10px; border-bottom: 1px solid #ddd; cursor: pointer; }
-    </style>
+    <meta charset="UTF-8">
+    <title>Study</title>
 </head>
 <body>
-
-    <div class="container">
-        <div class="sidebar" id="sidebar">Loading...</div>
-
-        <div class="player-area">
-            <iframe id="videoPlayer" src=""></iframe>
-            <h2 id="videoTitle">Select a video</h2>
-        </div>
+    <div style="display:flex;">
+        <div id="sidebar" style="width:300px;"></div>
+        <iframe id="videoPlayer" style="width:70%; height:500px;"></iframe>
     </div>
-
     <script>
         const params = new URLSearchParams(window.location.search);
-        let currentFolderId = params.get('id'); // Subject ID
         const courseId = "185";
 
         async function loadContent(folderId) {
-            const url = `https://api.thescholarverse.site/missionjeet/course/all-content/${courseId}?limit=1000&folder_id=${folderId}`;
-            const res = await fetch(url);
+            const res = await fetch(`https://api.thescholarverse.site/missionjeet/course/all-content/${courseId}?limit=1000&folder_id=${folderId}`);
             const result = await res.json();
-            
             const sidebar = document.getElementById('sidebar');
             sidebar.innerHTML = "";
-
             result.data.forEach(item => {
                 const div = document.createElement('div');
-                div.className = 'item';
                 div.innerText = item.title;
-
+                div.style.padding = "10px";
+                div.style.borderBottom = "1px solid #ccc";
+                div.style.cursor = "pointer";
                 div.onclick = () => {
-                    if (item.type === 'folder') {
-                        loadContent(item.entity_id); // Recursively load folder
-                    } else if (item.type === 'file' && item.data.video_type === 4) {
-                        // Agar file hai aur video hai, toh player mein load karein
-                        playVideo(item.data.download_urls, item.title);
+                    if (item.type === 'folder') loadContent(item.entity_id);
+                    else if (item.type === 'file' && item.data.video_type === 4) {
+                        const urls = JSON.parse(item.data.download_urls);
+                        const video720p = urls.find(u => u.title === '720') || urls[0];
+                        document.getElementById('videoPlayer').src = `https://devcoderz-player.vercel.app/rs45.html?Url=${encodeURIComponent(video720p.url)}`;
                     }
                 };
                 sidebar.appendChild(div);
             });
         }
-
-        function playVideo(downloadUrls, title) {
-            // API se 720p wala URL nikalna (JSON parse karke)
-            const urls = JSON.parse(downloadUrls);
-            const video720p = urls.find(u => u.title === '720') || urls[0];
-            
-            const playerUrl = `https://devcoderz-player.vercel.app/rs45.html?Url=${encodeURIComponent(video720p.url)}`;
-            document.getElementById('videoPlayer').src = playerUrl;
-            document.getElementById('videoTitle').innerText = title;
-        }
-
-        loadContent(currentFolderId);
+        loadContent(params.get('id'));
     </script>
 </body>
 </html>
