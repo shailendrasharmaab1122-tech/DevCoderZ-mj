@@ -1,1 +1,37 @@
-.
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>Mission Jeet - Courses</title>
+    <style>
+        .container { display: flex; gap: 20px; padding: 20px; }
+        .course-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Mission Jeet Batches</h1>
+    <div id="course-container" class="container"></div>
+
+    <script>
+        // API se data fetch karne ka logic
+        async function fetchCourses() {
+            const res = await fetch('https://api.thescholarverse.site/missionjeet/course/all-course');
+            const result = await res.json();
+            const courses = result.data[2].list;
+            
+            const container = document.getElementById('course-container');
+            courses.forEach(course => {
+                container.innerHTML += `
+                    <div class="course-card" onclick="window.location.href='content.html?id=${course.id}'">
+                        <img src="${course.thumbnail}" width="150">
+                        <h3>${course.title}</h3>
+                        <p>Price: ₹${course.offer_price}</p>
+                    </div>
+                `;
+            });
+        }
+        fetchCourses();
+    </script>
+</body>
+</html>
+
